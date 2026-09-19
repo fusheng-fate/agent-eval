@@ -1,0 +1,16 @@
+# 前端构建产物与依赖（多阶段构建在镜像内 npm ci / npm build）
+web/node_modules
+web/dist
+
+# Python 虚拟环境与缓存
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+
+# 杂项
+.git
+*.tsbuildinfo
+schema.sql

@@ -1,0 +1,26 @@
+# ---- Node / 前端 ----
+node_modules/
+web/dist/
+*.tsbuildinfo
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# ---- 本地配置（含账号密码/密钥，勿提交）----
+.env
+.env.local
+.env.*.local
+
+# ---- IDE / 编辑器 ----
+.idea/
+.vscode/
+
+# ---- 杂项 ----
+.DS_Store
+Thumbs.db
+*.log

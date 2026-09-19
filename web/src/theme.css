@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+/* 设计令牌：对齐 reference/legacy/page-src 视觉风格（Google 中性色 + 红色品牌点缀）。
+   沿用 --color-* 命名，便于复用组件（仅改值）。 */
+:root {
+  /* 品牌（红色点缀，沿用） */
+  --brand: #C7000B;
+  --brand-hover: #A8000A;
+  --link: #305FBF;
+  --intl-blue: #0067D1;
+
+  /* 中性（Google 灰系，对齐 legacy） */
+  --color-title: #202124;
+  --color-header: #202124;
+  --color-body: #5f6368;
+  --color-muted: #80868b;
+  --color-placeholder: #9aa0a6;
+
+  /* 表面 / 背景（对齐 legacy：页面底 #f8f9fa、侧栏/容器 #f5f7fa） */
+  --page-bg: #f8f9fa;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #f1f3f4;
+  --color-hover: #e8eaed;
+  --color-border: #dadce0;
+  --input-border: #dadce0;
+  --border-focus: #C7000B;
+
+  /* 语义（对齐 legacy） */
+  --color-success: #188038;
+  --color-warning: #f9ab00;
+  --color-error: #d93025;
+  --color-info: #1a73e8;
+
+  /* 阴影（对齐 legacy 两档） */
+  --shadow-card: 0 4px 6px -1px rgba(60, 64, 67, 0.12);
+  --shadow-sm: 0 1px 2px 0 rgba(60, 64, 67, 0.1);
+
+  /* 圆角（对齐 legacy 分级；--radius-card 12px 用于卡片/弹窗） */
+  --radius-form: 6px;
+  --radius-card: 12px;
+  --radius-full: 9999px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--color-body);
+  font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 细滚动条 */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #c9ced6;
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fadeIn 0.2s ease;
+}

@@ -1,0 +1,60 @@
+# Agent 评测平台 · 服务化编排（单节点起步，预留多节点）
+# 用法：docker compose up -d
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agent_eval
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NPM_REGISTRY: https://mirrors.huaweicloud.com/npm
+        PIP_INDEX_URL: https://mirrors.huaweicloud.com/repository/pypi/simple
+    environment:
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_USER: postgres
+      PG_PASSWORD: postgres
+      PG_DB: agent_eval
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      JWT_SECRET: change-me-in-prod
+      BOOTSTRAP_ADMIN_USERNAME: admin
+      BOOTSTRAP_ADMIN_PASSWORD: admin123
+      LLM_BASE_URL: ""
+      LLM_API_KEY: ""
+      LLM_MODEL: ""
+      TARGET_ENDPOINT: ""
+      CONCURRENCY_MODEL: "5"
+      CONCURRENCY_TARGET: "3"
+      WORKER_COUNT: "4"
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    # 多节点升级：replicas: N（api 无状态，worker 靠 Redis 队列横向扩展）
+    # replicas: 2
+
+volumes:
+  pgdata:
