@@ -248,8 +248,8 @@ class TestClaimRound:
         assert cr1_after.agent_output == "already-done"
 
 
-    def test_claim_second_round_blocked(self, db):
-        """第 1 轮被阻塞（第 0 轮未完成）。"""
+    def test_claim_second_round_not_blocked(self, db):
+        """第 1 轮不被阻塞（组间并行：第 0 轮 running 时第 1 轮仍可抢）。"""
         user = _user(db)
         ev, _ = _std_evaluator(db)
         tpl = FlowTemplate(name="tpl", chain_json=_chain_json())
@@ -266,9 +266,22 @@ class TestClaimRound:
         r1 = task_queue.claim_round("w1")
         assert r1 is not None and r1["round_no"] == 0
 
-        # 第 1 轮应被阻塞（第 0 轮还在 running）
+        # 第 1 轮可被另一 worker 抢（组间并行，不再等第 0 轮完成）
         r2 = task_queue.claim_round("w2")
-        assert r2 is None
+        assert r2 is not None
+        assert r2["round_no"] == 1
+        assert len(r2["case_result_ids"]) == 3
+
+        # 第 0 轮已被 w1 抢走，第 1 轮与其互不重叠，不会重复抢同一条 case
+        r0_ids = {uuid.UUID(x) for x in r1["case_result_ids"]}
+        r2_ids = {uuid.UUID(x) for x in r2["case_result_ids"]}
+        assert r0_ids.isdisjoint(r2_ids)
+
+        # 第 0 轮的 case 仍由 w1 持有（running + locked_by=w1），未被 w2 抢走
+        for cr_id in r1["case_result_ids"]:
+            cr = db.get(CaseResult, uuid.UUID(cr_id))
+            assert cr.status == "running"
+            assert cr.locked_by == "w1"
 
     def test_claim_second_round_after_first_done(self, db):
         """第 0 轮完成后，第 1 轮可抢。"""
@@ -601,7 +614,7 @@ class TestProcessRound:
             db.refresh(run)
             assert run.done_rounds == 1
 
-            # 抢第 1 轮（第 0 轮执行已完成，done_rounds 递增后前一轮屏障放行）
+            # 抢第 1 轮（第 0 轮已执行完，第 1 轮可抢；组间可并行）
             r1 = task_queue.claim_round("w2")
             assert r1 is not None and r1["round_no"] == 1
 
@@ -638,7 +651,7 @@ class TestRoundOrdering:
         验证：
         1. round_no 分配：case 1-5→0, 6-10→1, 11-12→2
         2. 每组内 case 按 sort_order 串行执行（mock 记录调用顺序）
-        3. 组间串行（前一组执行完才执行下一组）
+        3. 本测试串行地逐轮 claim+process，故整体顺序仍按轮次递增
         """
         user = _user(db)
         ev, _ = _std_evaluator(db)

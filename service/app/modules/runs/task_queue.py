@@ -6,7 +6,7 @@ worker 用 SELECT ... FOR UPDATE SKIP LOCKED 原子抢任务（PG），SQLite �
 
 轮次模式（round_size 非空）：
   - 队列单位从"单条 case"升级为"整组轮次"
-  - claim_round 抢一个可执行的轮次（该组所有 case 都是 pending + 前一轮已完成）
+  - claim_round 抢一个可执行的轮次（该组所有 case 都是 pending）
   - 组内 case 由 worker 串行执行，组间按 target_concurrency 并发
 
 非轮次模式（round_size 为空）：
@@ -135,21 +135,6 @@ def claim_round(worker_id: str) -> dict | None:
             )
             if inflight > 0:
                 continue
-
-            if round_no > 0:
-                prev_inflight = (
-                    db.query(CaseResult)
-                    .join(Case, CaseResult.case_id == Case.id)
-                    .filter(
-                        CaseResult.run_id == run_id,
-                        Case.dataset_id == run.dataset_id,
-                        Case.round_no == round_no - 1,
-                        CaseResult.status.in_(["pending", "running"]),
-                    )
-                    .count()
-                )
-                if prev_inflight > 0:
-                    continue
 
             # 只获取本轮 pending 的 CaseResult。绝不能把 executed/failed/error
             # 等已经处理过的结果重新改成 running。
