@@ -21,3 +21,6 @@ ALTER TABLE case_results ALTER COLUMN node_id TYPE TEXT;
 -- 2026-09-17 · v2.0：单条用例执行阶段的起止时刻（调被测 Agent 的起止）
 ALTER TABLE case_results ADD COLUMN IF NOT EXISTS exec_started_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE case_results ADD COLUMN IF NOT EXISTS exec_finished_at TIMESTAMP WITH TIME ZONE;
+
+-- 2026-09-19 · v2.1：评分重试计数与执行重试计数拆分
+ALTER TABLE case_results ADD COLUMN IF NOT EXISTS score_attempt INTEGER NOT NULL DEFAULT 0;

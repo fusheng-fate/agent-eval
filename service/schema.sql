@@ -87,9 +87,9 @@ CREATE TABLE reports (
 	PRIMARY KEY (id)
 );
 
-CREATE INDEX ix_reports_run_id ON reports (run_id);
-
 CREATE INDEX ix_reports_owner_id ON reports (owner_id);
+
+CREATE INDEX ix_reports_run_id ON reports (run_id);
 
 
 CREATE TABLE runs (
@@ -225,6 +225,7 @@ CREATE TABLE case_results (
 	node_id TEXT, 
 	trace_no VARCHAR(128), 
 	attempt INTEGER NOT NULL, 
+	score_attempt INTEGER NOT NULL, 
 	exec_started_at TIMESTAMP WITH TIME ZONE, 
 	exec_finished_at TIMESTAMP WITH TIME ZONE, 
 	locked_by VARCHAR(64), 

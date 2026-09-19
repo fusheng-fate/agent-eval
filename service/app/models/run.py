@@ -78,7 +78,8 @@ class CaseResult(Base):
     # 流程模板步骤 extract_to_result 回写的执行关联凭证（node_id/trace_no 等）
     node_id: Mapped[str | None] = mapped_column(Text)
     trace_no: Mapped[str | None] = mapped_column(String(128))
-    attempt: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False, default=0)  # 执行重试次数（含槽位让出）
+    score_attempt: Mapped[int] = mapped_column(Integer, nullable=False, default=0)  # 评分重试次数（独立于执行）
     # 执行阶段时间戳（调被测 Agent 的起止时刻；评分阶段另有 finished_at 记录终态时刻）
     exec_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     exec_finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

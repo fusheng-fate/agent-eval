@@ -254,6 +254,8 @@ YIELD_LIMIT_TTL = 3600  # 计数 TTL（秒），case 完成后自然过期
 # 让出退避时长（秒）：SlotBusy 让出后 case 在此时间内不被重抢，
 # 给占着槽位的 case 时间完成释放槽位，避免反复空转。
 YIELD_BACKOFF_SEC = 10
+# 评分重试上限（独立于执行 attempt）：评分阶段 LLM 瞬时错误最多重试这么多次。
+SCORE_RETRY_LIMIT = 2
 
 
 def _incr_yield_count(r, cr_id: str) -> int:
@@ -334,6 +336,8 @@ def _execute_case(
     决定重试或标 error。
     """
     cr.attempt += 1
+    # 重新执行 = 新的 agent_output，评分重试计数从头算（与执行 attempt 解耦）。
+    cr.score_attempt = 0
     # 每次执行从干净状态开始：清掉上一轮/被回收重跑前的残留结果字段，
     # 防止中途异常时残留旧分数/评价混入本次结果。
     _clear_result_fields(cr)
@@ -980,13 +984,16 @@ def process_score(cr_id: str) -> None:
             if cr is None:
                 return
             # 评分瞬时错误（LLM 超时）回 executed 让评分池重试；
-            # 不可恢复错误标 error。最多重试 2 次（attempt 从执行阶段累加）。
+            # 不可恢复错误标 error。重试上限用独立 score_attempt 计数，
+            # 与执行阶段 attempt（槽位让出/执行次数）无关。
             retryable = (
-                cr.attempt < 3
+                cr.score_attempt < SCORE_RETRY_LIMIT
                 and isinstance(e, (TimeoutError, httpx.TimeoutException, httpx.ConnectError, httpx.NetworkError))
             )
             if retryable:
-                _write_log(db, cr.run_id, "warn", f"用例评分瞬时错误，回退重试: {str(e)[:200]}")
+                cr.score_attempt += 1
+                _write_log(db, cr.run_id, "warn",
+                           f"用例评分瞬时错误，回退重试({cr.score_attempt}/{SCORE_RETRY_LIMIT}): {str(e)[:200]}")
                 cr.status = "executed"
                 cr.locked_by = None
                 cr.locked_at = None

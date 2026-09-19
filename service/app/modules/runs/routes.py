@@ -409,19 +409,11 @@ def resume(run_id: uuid.UUID, db: Session = Depends(get_db), user: User = Depend
     if run is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "任务不存在")
     require_owner_or_admin(run.owner_id, user)
-    # PG 队列：pending 行本就在队列（worker 直接抢），无需重新入队。
-    # 把执行中的 running 回 pending（清锁），评分中的 scoring 回 executed（清锁），
-    # 恢复后执行池/评分池自动续抢。
-    db.execute(
-        update(CaseResult)
-        .where(CaseResult.run_id == run_id, CaseResult.status == "running")
-        .values(status="pending", locked_by=None, locked_at=None)
-    )
-    db.execute(
-        update(CaseResult)
-        .where(CaseResult.run_id == run_id, CaseResult.status == "scoring")
-        .values(status="executed", locked_by=None, locked_at=None)
-    )
+    # 无需重置在途 case：pause 后未开始的 case 已由 worker 入口自行回退，
+    # 在途执行/评分的 worker 会自然跑完；真正卡死的（worker 崩溃）由
+    # recover_stale_running（心跳意识）回收。这里只把 run 恢复为 running。
+    # 若在此无条件 running→pending / scoring→executed，会与在途 worker 竞态，
+    # 造成同一 case 被重复执行/重复打分。
     _set_status(run, "running", db)
     return ok(RunOut.model_validate(run))
 
