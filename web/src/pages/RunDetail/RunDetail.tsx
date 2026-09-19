@@ -149,7 +149,7 @@ export default function RunDetail() {
                     >
                       <td className="py-3 px-3 text-[var(--color-title)] font-medium whitespace-nowrap">{c.case_no || c.id.slice(0, 8)}</td>
                       <td className="py-3 px-3">{c.status === "error" ? "-" : formatScore(c.overall_score)}</td>
-                      <td className="py-3 px-3"><StatusBadge status={c.status} /></td>
+                      <td className="py-3 px-3"><StatusBadge status={c.status === "running" && !c.exec_started_at ? "queued" : c.status} /></td>
                       <td className="py-3 px-3 text-[var(--color-body)] max-w-[240px] truncate" title={src?.user_input || ""}>{src?.user_input || "-"}</td>
                       <td className="py-3 px-3 text-[var(--color-body)] max-w-[240px] truncate" title={src?.expected_gt || ""}>{src?.expected_gt || "-"}</td>
                       <td className="py-3 px-3 text-[var(--color-body)] max-w-[240px] truncate" title={c.agent_output || ""}>{c.agent_output || "-"}</td>

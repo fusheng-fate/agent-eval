@@ -117,6 +117,9 @@ export interface CaseResultOut {
   error_msg: string | null;
   /** 被测 Agent 逐步请求/响应轨迹（定位问题用） */
   target_trace: SelfCheckTraceStep[] | null;
+  /** 执行开始时刻（调被测 Agent 前；null 表示尚未真正执行，用于区分「排队中」与「执行中」） */
+  exec_started_at: string | null;
+  exec_finished_at: string | null;
 }
 
 export interface MetricOut {

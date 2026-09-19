@@ -62,7 +62,7 @@ export default function CaseResult() {
         <h1 className="text-[20px] font-semibold text-[var(--color-title)] m-0">
           用例 {c.case_no || c.id.slice(0, 8)}
         </h1>
-        <StatusBadge status={c.status} />
+        <StatusBadge status={c.status === "running" && !c.exec_started_at ? "queued" : c.status} />
         <span
           className={`px-2.5 py-0.5 rounded-[var(--radius-full)] text-[11px] font-medium ${
             passed ? "bg-[#E7F7EC] text-[var(--color-success)]" : "bg-[#FDECEC] text-[var(--color-error)]"

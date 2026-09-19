@@ -15,6 +15,7 @@ const toneCls: Record<Tone, string> = {
 const map: Record<string, { tone: Tone; label: string; spin?: boolean }> = {
   pending: { tone: "gray", label: "待执行" },
   running: { tone: "blue", label: "执行中", spin: true },
+  queued: { tone: "gray", label: "排队中" },
   executed: { tone: "blue", label: "待评分", spin: true },
   scoring: { tone: "blue", label: "评分中", spin: true },
   paused: { tone: "yellow", label: "已暂停" },

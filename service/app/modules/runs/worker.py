@@ -346,11 +346,13 @@ def _execute_case(
     if getattr(run, "mode", "exec") != "eval_import":
         cr.agent_output = None
     _write_log(db, run.id, "info", f"开始执行用例 {case.case_no}")
+    # 执行开始时刻提前到本次 commit 一起提交：执行期间其他连接即可看到
+    # exec_started_at 非空，前端据此区分「执行中(running+非空)」与「排队中(running+空)」。
+    cr.exec_started_at = _utcnow()
     db.commit()
 
     # 1) 拿 agent_output
     _t_exec = time.monotonic()
-    cr.exec_started_at = _utcnow()  # 执行开始时刻（调被测 Agent 前）
     if getattr(run, "mode", "exec") == "eval_import":
         agent_output = cr.agent_output or ""
     else:
